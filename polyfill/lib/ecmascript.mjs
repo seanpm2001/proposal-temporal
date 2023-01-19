@@ -4361,14 +4361,25 @@ export const ES = ObjectAssign({}, ES2022, {
     const calendar = GetSlot(yearMonth, CALENDAR);
     const fieldNames = ES.CalendarFields(calendar, ['monthCode', 'year']);
     const fields = ES.PrepareTemporalFields(yearMonth, fieldNames, []);
+    const fieldsCopy = ObjectCreate(null);
+    ES.CopyDataProperties(fieldsCopy, fields, []);
+    fields.day = 1; //sign < 0 ? ES.CalendarDaysInMonth(calendar, yearMonth)
+    let startDate = ES.CalendarDateFromFields(calendar, fields);
     const sign = ES.DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
-    fields.day = sign < 0 ? ES.CalendarDaysInMonth(calendar, yearMonth) : 1;
-    const startDate = ES.CalendarDateFromFields(calendar, fields);
+    const dateAdd = ES.GetMethod(calendar, 'dateAdd');
+    if (sign < 0) {
+      const oneMonthDuration = new Duration(0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+      const nextMonth = ES.CalendarDateAdd(calendar, startDate, oneMonthDuration, undefined, dateAdd);
+      const minusDayDuration = new Duration(0, 0, 0, -1, 0, 0, 0, 0, 0, 0);
+      const endOfMonth = ES.CalendarDateAdd(calendar, nextMonth, minusDayDuration, undefined, dateAdd);
+      fieldsCopy.day = endOfMonth.day;
+      startDate = ES.CalendarDateFromFields(calendar, fieldsCopy);
+    }
     const Duration = GetIntrinsic('%Temporal.Duration%');
     const durationToAdd = new Duration(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
     const optionsCopy = ObjectCreate(null);
     ES.CopyDataProperties(optionsCopy, options, []);
-    const addedDate = ES.CalendarDateAdd(calendar, startDate, durationToAdd, options);
+    const addedDate = ES.CalendarDateAdd(calendar, startDate, durationToAdd, options, dateAdd);
     const addedDateFields = ES.PrepareTemporalFields(addedDate, fieldNames, []);
 
     return ES.CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy);
