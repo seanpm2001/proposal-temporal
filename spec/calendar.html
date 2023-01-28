@@ -478,6 +478,27 @@
       </emu-alg>
     </emu-clause>
 
+    <emu-clause id="sec-temporal-objectimplementstemporalcalendarprotocol" type="abstract operation">
+      <h1>
+        ObjectImplementsTemporalCalendarProtocol (
+          _object_: an Object,
+        ): either a normal completion containing a Boolean, or an abrupt completion
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>
+          It determines whether the given _object_ is a Temporal.Calendar instance or implements the required methods from the Temporal.Calendar protocol.
+          It will always return a normal completion unless _object_ is a Proxy or has one in its prototype chain.
+        </dd>
+      </dl>
+      <emu-alg>
+        1. If _object_ has an [[InitializedTemporalCalendar]] internal slot, return *true*.
+        1. For each property key _key_ of « *"dateAdd"*, *"dateFromFields"*, *"dateUntil"*, *"day"*, *"dayOfWeek"*, *"dayOfYear"*, *"daysInMonth"*, *"daysInWeek"*, *"daysInYear"*, *"fields"*, *"id"*, *"inLeapYear"*, *"mergeFields"*, *"month"*, *"monthCode"*, *"monthDayFromFields"*, *"monthsInYear"*, *"weekOfYear"*, *"year"*, *"yearMonthFromFields"*, *"yearOfWeek"* », do
+          1. If ? HasProperty(_object_, _key_) is *false*, return *false*.
+        1. Return *true*.
+      </emu-alg>
+    </emu-clause>
+
     <emu-clause id="sec-temporal-totemporalcalendarslotvalue" type="abstract operation">
       <h1>
         ToTemporalCalendarSlotValue (
@@ -492,7 +513,7 @@
         1. If Type(_temporalCalendarLike_) is Object, then
           1. If _temporalCalendarLike_ has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
             1. Return _temporalCalendarLike_.[[Calendar]].
-          1. If _temporalCalendarLike_ has an [[InitializedTemporalTime]] or [[InitializedTemporalTimeZone]] internal slot, throw a *RangeError* exception.
+          1. If ? ObjectImplementsTemporalCalendarProtocol(_temporalCalendarLike_) is *false*, throw a *TypeError* exception.
           1. Return _temporalCalendarLike_.
         1. Let _identifier_ be ? ToString(_temporalCalendarLike_).
         1. Set _identifier_ to ? ParseTemporalCalendarString(_identifier_).
