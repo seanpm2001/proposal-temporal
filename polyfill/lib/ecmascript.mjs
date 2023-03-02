@@ -1913,9 +1913,9 @@ export const ES = ObjectAssign({}, ES2022, {
     const offsetNs = ES.GetOffsetNanosecondsFor(timeZone, instant);
     return ES.FormatTimeZoneOffsetString(offsetNs);
   },
-  GetPlainDateTimeFor: (timeZone, instant, calendar) => {
+  GetPlainDateTimeFor: (timeZone, instant, calendar, precalculatedOffsetNs = undefined) => {
     const ns = GetSlot(instant, EPOCHNANOSECONDS);
-    const offsetNs = ES.GetOffsetNanosecondsFor(timeZone, instant);
+    const offsetNs = precalculatedOffsetNs ?? ES.GetOffsetNanosecondsFor(timeZone, instant);
     let { year, month, day, hour, minute, second, millisecond, microsecond, nanosecond } = ES.GetISOPartsFromEpoch(ns);
     ({ year, month, day, hour, minute, second, millisecond, microsecond, nanosecond } = ES.BalanceISODateTime(
       year,
@@ -2127,7 +2127,8 @@ export const ES = ObjectAssign({}, ES2022, {
       outputTimeZone = new TemporalTimeZone('UTC');
     }
     const iso = ES.GetISO8601Calendar();
-    const dateTime = ES.GetPlainDateTimeFor(outputTimeZone, instant, iso);
+    const offsetNs = ES.GetOffsetNanosecondsFor(outputTimeZone, instant);
+    const dateTime = ES.GetPlainDateTimeFor(outputTimeZone, instant, iso, offsetNs);
     const year = ES.ISOYearString(GetSlot(dateTime, ISO_YEAR));
     const month = ES.ISODateTimePartString(GetSlot(dateTime, ISO_MONTH));
     const day = ES.ISODateTimePartString(GetSlot(dateTime, ISO_DAY));
@@ -2142,7 +2143,6 @@ export const ES = ObjectAssign({}, ES2022, {
     );
     let timeZoneString = 'Z';
     if (timeZone !== undefined) {
-      const offsetNs = ES.GetOffsetNanosecondsFor(outputTimeZone, instant);
       timeZoneString = ES.FormatISOTimeZoneOffsetString(offsetNs);
     }
     return `${year}-${month}-${day}T${hour}:${minute}${seconds}${timeZoneString}`;
@@ -2301,7 +2301,8 @@ export const ES = ObjectAssign({}, ES2022, {
 
     const tz = GetSlot(zdt, TIME_ZONE);
     const iso = ES.GetISO8601Calendar();
-    const dateTime = ES.GetPlainDateTimeFor(tz, instant, iso);
+    const offsetNs = ES.GetOffsetNanosecondsFor(tz, instant);
+    const dateTime = ES.GetPlainDateTimeFor(tz, instant, iso, offsetNs);
 
     const year = ES.ISOYearString(GetSlot(dateTime, ISO_YEAR));
     const month = ES.ISODateTimePartString(GetSlot(dateTime, ISO_MONTH));
@@ -2317,7 +2318,6 @@ export const ES = ObjectAssign({}, ES2022, {
     );
     let result = `${year}-${month}-${day}T${hour}:${minute}${seconds}`;
     if (showOffset !== 'never') {
-      const offsetNs = ES.GetOffsetNanosecondsFor(tz, instant);
       result += ES.FormatISOTimeZoneOffsetString(offsetNs);
     }
     if (showTimeZone !== 'never') {
