@@ -901,19 +901,17 @@ export const ES = ObjectAssign({}, ES2022, {
       if (ES.IsTemporalZonedDateTime(relativeTo) || ES.IsTemporalDate(relativeTo)) return relativeTo;
       if (ES.IsTemporalDateTime(relativeTo)) return ES.TemporalDateTimeToDate(relativeTo);
       calendar = ES.GetTemporalCalendarWithISODefault(relativeTo);
-      const fieldNames = ES.CalendarFields(calendar, [
-        'day',
+      const fieldNames = ES.CalendarFields(calendar, ['day', 'month', 'monthCode', 'year']);
+      ES.Call(ArrayPrototypePush, fieldNames, [
         'hour',
         'microsecond',
         'millisecond',
         'minute',
-        'month',
-        'monthCode',
         'nanosecond',
+        'offset',
         'second',
-        'year'
+        'timeZone'
       ]);
-      ES.Call(ArrayPrototypePush, fieldNames, ['timeZone', 'offset']);
       const fields = ES.PrepareTemporalFields(relativeTo, fieldNames, []);
       const dateOptions = ObjectCreate(null);
       dateOptions.overflow = 'constrain';
@@ -1117,18 +1115,8 @@ export const ES = ObjectAssign({}, ES2022, {
       }
 
       calendar = ES.GetTemporalCalendarWithISODefault(item);
-      const fieldNames = ES.CalendarFields(calendar, [
-        'day',
-        'hour',
-        'microsecond',
-        'millisecond',
-        'minute',
-        'month',
-        'monthCode',
-        'nanosecond',
-        'second',
-        'year'
-      ]);
+      const fieldNames = ES.CalendarFields(calendar, ['day', 'month', 'monthCode', 'year']);
+      ES.Call(ArrayPrototypePush, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'second']);
       const fields = ES.PrepareTemporalFields(item, fieldNames, []);
       ({ year, month, day, hour, minute, second, millisecond, microsecond, nanosecond } =
         ES.InterpretTemporalDateTimeFields(calendar, fields, options));
@@ -1366,19 +1354,17 @@ export const ES = ObjectAssign({}, ES2022, {
     if (ES.Type(item) === 'Object') {
       if (ES.IsTemporalZonedDateTime(item)) return item;
       calendar = ES.GetTemporalCalendarWithISODefault(item);
-      const fieldNames = ES.CalendarFields(calendar, [
-        'day',
+      const fieldNames = ES.CalendarFields(calendar, ['day', 'month', 'monthCode', 'year']);
+      ES.Call(ArrayPrototypePush, fieldNames, [
         'hour',
         'microsecond',
         'millisecond',
         'minute',
-        'month',
-        'monthCode',
         'nanosecond',
+        'offset',
         'second',
-        'year'
+        'timeZone'
       ]);
-      ES.Call(ArrayPrototypePush, fieldNames, ['timeZone', 'offset']);
       const fields = ES.PrepareTemporalFields(item, fieldNames, ['timeZone']);
       timeZone = ES.ToTemporalTimeZone(fields.timeZone);
       offset = fields.offset;
