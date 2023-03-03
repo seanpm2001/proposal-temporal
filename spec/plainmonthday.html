@@ -150,14 +150,15 @@
         1. If Type(_temporalMonthDayLike_) is not Object, then
           1. Throw a *TypeError* exception.
         1. Perform ? RejectObjectWithCalendarOrTimeZone(_temporalMonthDayLike_).
-        1. Set _options_ to ? GetOptionsObject(_options_).
+        1. Let _resolvedOptions_ be OrdinaryObjectCreate(*null*).
+        1. Perform ? CopyDataProperties(_resolvedOptions_, ? GetOptionsObject(_options_), «»).
         1. Let _calendar_ be _monthDay_.[[Calendar]].
         1. Let _fieldNames_ be ? CalendarFields(_calendar_, « *"day"*, *"month"*, *"monthCode"*, *"year"* »).
         1. Let _fields_ be ? PrepareTemporalFields(_monthDay_, _fieldNames_, «»).
         1. Let _partialMonthDay_ be ? PrepareTemporalFields(_temporalMonthDayLike_, _fieldNames_, ~partial~).
         1. Set _fields_ to ? CalendarMergeFields(_calendar_, _fields_, _partialMonthDay_).
         1. Set _fields_ to ? PrepareTemporalFields(_fields_, _fieldNames_, «»).
-        1. Return ? CalendarMonthDayFromFields(_calendar_, _fields_, _options_).
+        1. Return ? CalendarMonthDayFromFields(_calendar_, _fields_, _resolvedOptions_).
       </emu-alg>
     </emu-clause>
 
@@ -348,6 +349,10 @@
       <emu-alg>
         1. If _options_ is not present, set _options_ to *undefined*.
         1. Assert: Type(_options_) is Object or Undefined.
+        1. If _options_ is not *undefined*, then
+          1. Let _resolvedOptions_ be OrdinaryObjectCreate(*null*).
+          1. Perform ? CopyDataProperties(_resolvedOptions_, ? GetOptionsObject(_options_), «»).
+          1. Let _options_ be _resolvedOptions_.
         1. Let _referenceISOYear_ be 1972 (the first leap year after the Unix epoch).
         1. If Type(_item_) is Object, then
           1. If _item_ has an [[InitializedTemporalMonthDay]] internal slot, then

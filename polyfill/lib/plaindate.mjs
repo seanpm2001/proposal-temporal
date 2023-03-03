@@ -16,6 +16,8 @@ import {
   GetSlot
 } from './slots.mjs';
 
+const ObjectCreate = Object.create;
+
 export class PlainDate {
   constructor(isoYear, isoMonth, isoDay, calendar = ES.GetISO8601Calendar()) {
     isoYear = ES.ToIntegerWithTruncation(isoYear);
@@ -95,7 +97,8 @@ export class PlainDate {
       throw new TypeError('invalid argument');
     }
     ES.RejectObjectWithCalendarOrTimeZone(temporalDateLike);
-    options = ES.GetOptionsObject(options);
+    const resolvedOptions = ObjectCreate(null);
+    ES.CopyDataProperties(resolvedOptions, ES.GetOptionsObject(options), []);
 
     const calendar = GetSlot(this, CALENDAR);
     const fieldNames = ES.CalendarFields(calendar, ['day', 'month', 'monthCode', 'year']);
@@ -104,7 +107,7 @@ export class PlainDate {
     fields = ES.CalendarMergeFields(calendar, fields, partialDate);
     fields = ES.PrepareTemporalFields(fields, fieldNames, []);
 
-    return ES.CalendarDateFromFields(calendar, fields, options);
+    return ES.CalendarDateFromFields(calendar, fields, resolvedOptions);
   }
   withCalendar(calendar) {
     if (!ES.IsTemporalDate(this)) throw new TypeError('invalid receiver');

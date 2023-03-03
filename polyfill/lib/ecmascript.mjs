@@ -1046,6 +1046,11 @@ export const ES = ObjectAssign({}, ES2022, {
   },
 
   ToTemporalDate: (item, options) => {
+    if (options !== undefined) {
+      const resolvedOptions = ObjectCreate(null);
+      ES.CopyDataProperties(resolvedOptions, ES.GetOptionsObject(options), []);
+      options = resolvedOptions;
+    }
     if (ES.Type(item) === 'Object') {
       if (ES.IsTemporalDate(item)) return item;
       if (ES.IsTemporalZonedDateTime(item)) {
@@ -1176,6 +1181,11 @@ export const ES = ObjectAssign({}, ES2022, {
     return new TemporalInstant(ns);
   },
   ToTemporalMonthDay: (item, options) => {
+    if (options !== undefined) {
+      const resolvedOptions = ObjectCreate(null);
+      ES.CopyDataProperties(resolvedOptions, ES.GetOptionsObject(options), []);
+      options = resolvedOptions;
+    }
     if (ES.Type(item) === 'Object') {
       if (ES.IsTemporalMonthDay(item)) return item;
       let calendar, calendarAbsent;
@@ -1256,6 +1266,11 @@ export const ES = ObjectAssign({}, ES2022, {
     return new TemporalPlainTime(hour, minute, second, millisecond, microsecond, nanosecond);
   },
   ToTemporalYearMonth: (item, options) => {
+    if (options !== undefined) {
+      const resolvedOptions = ObjectCreate(null);
+      ES.CopyDataProperties(resolvedOptions, ES.GetOptionsObject(options), []);
+      options = resolvedOptions;
+    }
     if (ES.Type(item) === 'Object') {
       if (ES.IsTemporalYearMonth(item)) return item;
       const calendar = ES.GetTemporalCalendarWithISODefault(item);
