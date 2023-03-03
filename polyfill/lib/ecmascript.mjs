@@ -1075,6 +1075,7 @@ export const ES = ObjectAssign({}, ES2022, {
   InterpretTemporalDateTimeFields: (calendar, fields, options) => {
     let { hour, minute, second, millisecond, microsecond, nanosecond } = ES.ToTemporalTimeRecord(fields);
     const overflow = ES.ToTemporalOverflow(options);
+    options.overflow = overflow;
     const date = ES.CalendarDateFromFields(calendar, fields, options);
     const year = GetSlot(date, ISO_YEAR);
     const month = GetSlot(date, ISO_MONTH);
@@ -1092,14 +1093,17 @@ export const ES = ObjectAssign({}, ES2022, {
   },
   ToTemporalDateTime: (item, options) => {
     let year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar;
+    const resolvedOptions = ObjectCreate(null);
+    ES.CopyDataProperties(resolvedOptions, ES.GetOptionsObject(options), []);
+
     if (ES.Type(item) === 'Object') {
       if (ES.IsTemporalDateTime(item)) return item;
       if (ES.IsTemporalZonedDateTime(item)) {
-        ES.ToTemporalOverflow(options); // validate and ignore
+        ES.ToTemporalOverflow(resolvedOptions); // validate and ignore
         return ES.GetPlainDateTimeFor(GetSlot(item, TIME_ZONE), GetSlot(item, INSTANT), GetSlot(item, CALENDAR));
       }
       if (ES.IsTemporalDate(item)) {
-        ES.ToTemporalOverflow(options); // validate and ignore
+        ES.ToTemporalOverflow(resolvedOptions); // validate and ignore
         return ES.CreateTemporalDateTime(
           GetSlot(item, ISO_YEAR),
           GetSlot(item, ISO_MONTH),
@@ -1119,9 +1123,9 @@ export const ES = ObjectAssign({}, ES2022, {
       ES.Call(ArrayPrototypePush, fieldNames, ['hour', 'microsecond', 'millisecond', 'minute', 'nanosecond', 'second']);
       const fields = ES.PrepareTemporalFields(item, fieldNames, []);
       ({ year, month, day, hour, minute, second, millisecond, microsecond, nanosecond } =
-        ES.InterpretTemporalDateTimeFields(calendar, fields, options));
+        ES.InterpretTemporalDateTimeFields(calendar, fields, resolvedOptions));
     } else {
-      ES.ToTemporalOverflow(options); // validate and ignore
+      ES.ToTemporalOverflow(resolvedOptions); // validate and ignore
       let z;
       ({ year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar, z } =
         ES.ParseTemporalDateTimeString(ES.ToString(item)));
@@ -1348,6 +1352,8 @@ export const ES = ObjectAssign({}, ES2022, {
   },
   ToTemporalZonedDateTime: (item, options) => {
     let year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, timeZone, offset, calendar;
+    const resolvedOptions = ObjectCreate(null);
+    ES.CopyDataProperties(resolvedOptions, ES.GetOptionsObject(options), []);
     let disambiguation, offsetOpt;
     let matchMinute = false;
     let offsetBehaviour = 'option';
@@ -1371,10 +1377,10 @@ export const ES = ObjectAssign({}, ES2022, {
       if (offset === undefined) {
         offsetBehaviour = 'wall';
       }
-      disambiguation = ES.ToTemporalDisambiguation(options);
-      offsetOpt = ES.ToTemporalOffset(options, 'reject');
+      disambiguation = ES.ToTemporalDisambiguation(resolvedOptions);
+      offsetOpt = ES.ToTemporalOffset(resolvedOptions, 'reject');
       ({ year, month, day, hour, minute, second, millisecond, microsecond, nanosecond } =
-        ES.InterpretTemporalDateTimeFields(calendar, fields, options));
+        ES.InterpretTemporalDateTimeFields(calendar, fields, resolvedOptions));
     } else {
       let ianaName, z;
       ({ year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, ianaName, offset, z, calendar } =
@@ -1389,9 +1395,9 @@ export const ES = ObjectAssign({}, ES2022, {
       if (!calendar) calendar = ES.GetISO8601Calendar();
       calendar = ES.ToTemporalCalendar(calendar);
       matchMinute = true; // ISO strings may specify offset with less precision
-      disambiguation = ES.ToTemporalDisambiguation(options);
-      offsetOpt = ES.ToTemporalOffset(options, 'reject');
-      ES.ToTemporalOverflow(options); // validate and ignore
+      disambiguation = ES.ToTemporalDisambiguation(resolvedOptions);
+      offsetOpt = ES.ToTemporalOffset(resolvedOptions, 'reject');
+      ES.ToTemporalOverflow(resolvedOptions); // validate and ignore
     }
     let offsetNs = 0;
     if (offsetBehaviour === 'option') offsetNs = ES.ParseTimeZoneOffsetString(offset);
