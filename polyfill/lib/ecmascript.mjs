@@ -3488,21 +3488,23 @@ export const ES = ObjectAssign({}, ES2022, {
     let milliseconds = diff.divide(1e6).mod(1e3).toJSNumber();
     let seconds = diff.divide(1e9).toJSNumber();
 
-    ({ hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.RoundDuration(
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      seconds,
-      milliseconds,
-      microseconds,
-      nanoseconds,
-      increment,
-      smallestUnit,
-      roundingMode
-    ));
+    if (smallestUnit !== 'nanosecond' || increment !== 1) {
+      ({ hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.RoundDuration(
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        seconds,
+        milliseconds,
+        microseconds,
+        nanoseconds,
+        increment,
+        smallestUnit,
+        roundingMode
+      ));
+    }
     return ES.BalanceDuration(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit);
   },
   DifferenceISODateTime: (
@@ -3792,12 +3794,26 @@ export const ES = ObjectAssign({}, ES2022, {
         resolvedOptions
       );
 
-    const relativeTo = ES.TemporalDateTimeToDate(plainDateTime);
-    ({ years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } =
-      ES.RoundDuration(
-        years,
-        months,
-        weeks,
+    if (settings.smallestUnit !== 'nanosecond' || settings.roundingIncrement !== 1) {
+      const relativeTo = ES.TemporalDateTimeToDate(plainDateTime);
+      ({ years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } =
+        ES.RoundDuration(
+          years,
+          months,
+          weeks,
+          days,
+          hours,
+          minutes,
+          seconds,
+          milliseconds,
+          microseconds,
+          nanoseconds,
+          settings.roundingIncrement,
+          settings.smallestUnit,
+          settings.roundingMode,
+          relativeTo
+        ));
+      ({ days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.BalanceDuration(
         days,
         hours,
         minutes,
@@ -3805,21 +3821,9 @@ export const ES = ObjectAssign({}, ES2022, {
         milliseconds,
         microseconds,
         nanoseconds,
-        settings.roundingIncrement,
-        settings.smallestUnit,
-        settings.roundingMode,
-        relativeTo
+        settings.largestUnit
       ));
-    ({ days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.BalanceDuration(
-      days,
-      hours,
-      minutes,
-      seconds,
-      milliseconds,
-      microseconds,
-      nanoseconds,
-      settings.largestUnit
-    ));
+    }
 
     const Duration = GetIntrinsic('%Temporal.Duration%');
     return new Duration(
@@ -3857,21 +3861,23 @@ export const ES = ObjectAssign({}, ES2022, {
       GetSlot(other, ISO_MICROSECOND),
       GetSlot(other, ISO_NANOSECOND)
     );
-    ({ hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.RoundDuration(
-      0,
-      0,
-      0,
-      0,
-      hours,
-      minutes,
-      seconds,
-      milliseconds,
-      microseconds,
-      nanoseconds,
-      settings.roundingIncrement,
-      settings.smallestUnit,
-      settings.roundingMode
-    ));
+    if (settings.smallestUnit !== 'nanosecond' || settings.roundingIncrement !== 1) {
+      ({ hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.RoundDuration(
+        0,
+        0,
+        0,
+        0,
+        hours,
+        minutes,
+        seconds,
+        milliseconds,
+        microseconds,
+        nanoseconds,
+        settings.roundingIncrement,
+        settings.smallestUnit,
+        settings.roundingMode
+      ));
+    }
     ({ hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.BalanceDuration(
       0,
       hours,
@@ -3984,40 +3990,43 @@ export const ES = ObjectAssign({}, ES2022, {
       }
       ({ years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } =
         ES.DifferenceZonedDateTime(ns1, ns2, timeZone, calendar, settings.largestUnit, resolvedOptions));
-      ({ years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } =
-        ES.RoundDuration(
-          years,
-          months,
-          weeks,
-          days,
-          hours,
-          minutes,
-          seconds,
-          milliseconds,
-          microseconds,
-          nanoseconds,
-          settings.roundingIncrement,
-          settings.smallestUnit,
-          settings.roundingMode,
-          zonedDateTime
-        ));
-      ({ years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } =
-        ES.AdjustRoundedDurationDays(
-          years,
-          months,
-          weeks,
-          days,
-          hours,
-          minutes,
-          seconds,
-          milliseconds,
-          microseconds,
-          nanoseconds,
-          settings.roundingIncrement,
-          settings.smallestUnit,
-          settings.roundingMode,
-          zonedDateTime
-        ));
+
+      if (settings.smallestUnit !== 'nanosecond' || settings.roundingIncrement !== 1) {
+        ({ years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } =
+          ES.RoundDuration(
+            years,
+            months,
+            weeks,
+            days,
+            hours,
+            minutes,
+            seconds,
+            milliseconds,
+            microseconds,
+            nanoseconds,
+            settings.roundingIncrement,
+            settings.smallestUnit,
+            settings.roundingMode,
+            zonedDateTime
+          ));
+        ({ years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } =
+          ES.AdjustRoundedDurationDays(
+            years,
+            months,
+            weeks,
+            days,
+            hours,
+            minutes,
+            seconds,
+            milliseconds,
+            microseconds,
+            nanoseconds,
+            settings.roundingIncrement,
+            settings.smallestUnit,
+            settings.roundingMode,
+            zonedDateTime
+          ));
+      }
     }
 
     const Duration = GetIntrinsic('%Temporal.Duration%');
