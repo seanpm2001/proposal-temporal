@@ -1578,6 +1578,11 @@ export const ES = ObjectAssign({}, ES2022, {
     return new TemporalCalendar('iso8601');
   },
   CalendarFields: (calendar, fieldNames) => {
+    // CAUTION: Rebase conflict with #2482
+    if (typeof calendar === 'string') {
+      if (calendar === 'iso8601') return fieldNames;
+      return GetIntrinsic('%CalendarDateFields%')(calendar, fieldNames);
+    }
     const fields = ES.GetMethod(calendar, 'fields');
     fieldNames = ES.Call(fields, calendar, [fieldNames]);
     const result = [];
