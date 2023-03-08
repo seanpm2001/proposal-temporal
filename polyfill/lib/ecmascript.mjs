@@ -2787,7 +2787,7 @@ export const ES = ObjectAssign({}, ES2022, {
       'day',
       ObjectCreate(null)
     );
-    let intermediateNs = ES.AddZonedDateTime(start, timeZone, calendar, 0, 0, 0, days, 0, 0, 0, 0, 0, 0);
+    let intermediateNs = ES.AddZonedDateTime(start, timeZone, calendar, 0, 0, 0, days, 0, 0, 0, 0, 0, 0, dtStart);
     // may disambiguate
 
     // If clock time after addition was in the middle of a skipped period, the
@@ -2802,7 +2802,22 @@ export const ES = ObjectAssign({}, ES2022, {
     if (sign === 1) {
       while (days.greater(0) && intermediateNs.greater(endNs)) {
         days = days.prev();
-        intermediateNs = ES.AddZonedDateTime(start, timeZone, calendar, 0, 0, 0, days.toJSNumber(), 0, 0, 0, 0, 0, 0);
+        intermediateNs = ES.AddZonedDateTime(
+          start,
+          timeZone,
+          calendar,
+          0,
+          0,
+          0,
+          days.toJSNumber(),
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          dtStart
+        );
         // may do disambiguation
       }
     }
@@ -3651,7 +3666,22 @@ export const ES = ObjectAssign({}, ES2022, {
       largestUnit,
       options
     );
-    let intermediateNs = ES.AddZonedDateTime(start, timeZone, calendar, years, months, weeks, 0, 0, 0, 0, 0, 0, 0);
+    let intermediateNs = ES.AddZonedDateTime(
+      start,
+      timeZone,
+      calendar,
+      years,
+      months,
+      weeks,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      dtStart
+    );
     // may disambiguate
     let timeRemainderNs = ns2.subtract(intermediateNs);
     const intermediate = ES.CreateTemporalZonedDateTime(intermediateNs, timeZone, calendar);
@@ -4318,7 +4348,23 @@ export const ES = ObjectAssign({}, ES2022, {
       nanosecond
     };
   },
-  AddZonedDateTime: (instant, timeZone, calendar, years, months, weeks, days, h, min, s, ms, µs, ns, options) => {
+  AddZonedDateTime: (
+    instant,
+    timeZone,
+    calendar,
+    years,
+    months,
+    weeks,
+    days,
+    h,
+    min,
+    s,
+    ms,
+    µs,
+    ns,
+    precalculatedDateTime = undefined,
+    options = undefined
+  ) => {
     // If only time is to be added, then use Instant math. It's not OK to fall
     // through to the date/time code below because compatible disambiguation in
     // the PlainDateTime=>Instant conversion will change the offset of any
@@ -4334,7 +4380,7 @@ export const ES = ObjectAssign({}, ES2022, {
 
     // RFC 5545 requires the date portion to be added in calendar days and the
     // time portion to be added in exact time.
-    let dt = ES.GetPlainDateTimeFor(timeZone, instant, calendar);
+    const dt = precalculatedDateTime ?? ES.GetPlainDateTimeFor(timeZone, instant, calendar);
     const datePart = ES.CreateTemporalDate(
       GetSlot(dt, ISO_YEAR),
       GetSlot(dt, ISO_MONTH),
@@ -4540,6 +4586,7 @@ export const ES = ObjectAssign({}, ES2022, {
       sign * milliseconds,
       sign * microseconds,
       sign * nanoseconds,
+      undefined,
       options
     );
     return ES.CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar);

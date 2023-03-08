@@ -381,9 +381,9 @@ export class ZonedDateTime {
 
     const DateTime = GetIntrinsic('%Temporal.PlainDateTime%');
     const calendar = GetSlot(this, CALENDAR);
-    const dtStart = new DateTime(GetSlot(dt, ISO_YEAR), GetSlot(dt, ISO_MONTH), GetSlot(dt, ISO_DAY), 0, 0, 0, 0, 0, 0);
+    const dtStart = new DateTime(year, month, day, 0, 0, 0, 0, 0, 0);
     const instantStart = ES.GetInstantFor(timeZone, dtStart, 'compatible');
-    const endNs = ES.AddZonedDateTime(instantStart, timeZone, calendar, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+    const endNs = ES.AddZonedDateTime(instantStart, timeZone, calendar, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, dtStart);
     const dayLengthNs = endNs.subtract(GetSlot(instantStart, EPOCHNANOSECONDS));
     if (dayLengthNs.leq(0)) {
       throw new RangeError('cannot round a ZonedDateTime in a calendar with zero- or negative-length days');
