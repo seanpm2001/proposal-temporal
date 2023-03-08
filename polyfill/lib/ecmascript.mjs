@@ -3263,7 +3263,23 @@ export const ES = ObjectAssign({}, ES2022, {
       const timeZone = GetSlot(relativeTo, TIME_ZONE);
       const calendar = GetSlot(relativeTo, CALENDAR);
       const offsetBefore = ES.GetOffsetNanosecondsFor(timeZone, instant);
-      const after = ES.AddZonedDateTime(instant, timeZone, calendar, y, mon, w, d, 0, 0, 0, 0, 0, 0);
+      const precalculatedDateTime = ES.GetPlainDateTimeFor(timeZone, instant, calendar, offsetBefore);
+      const after = ES.AddZonedDateTime(
+        instant,
+        timeZone,
+        calendar,
+        y,
+        mon,
+        w,
+        d,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        precalculatedDateTime
+      );
       const TemporalInstant = GetIntrinsic('%Temporal.Instant%');
       const instantAfter = new TemporalInstant(after);
       const offsetAfter = ES.GetOffsetNanosecondsFor(timeZone, instantAfter);
