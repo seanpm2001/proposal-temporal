@@ -3257,6 +3257,7 @@ export const ES = ObjectAssign({}, ES2022, {
     };
   },
   CalculateOffsetShift: (relativeTo, y, mon, w, d) => {
+    if (y === 0 && mon === 0 && w === 0 && d === 0) return 0;
     if (ES.IsTemporalZonedDateTime(relativeTo)) {
       const instant = GetSlot(relativeTo, INSTANT);
       const timeZone = GetSlot(relativeTo, TIME_ZONE);
