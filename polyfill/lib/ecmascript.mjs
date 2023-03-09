@@ -4119,6 +4119,32 @@ export const ES = ObjectAssign({}, ES2022, {
     ({ year, month, day } = ES.BalanceISODate(year, month, day));
     return { year, month, day };
   },
+  AddDate: (calendar, plainDate, duration, options = undefined, dateAdd = undefined) => {
+    const years = GetSlot(duration, YEARS);
+    const months = GetSlot(duration, MONTHS);
+    const weeks = GetSlot(duration, WEEKS);
+    if (years !== 0 || months !== 0 || weeks !== 0) {
+      return ES.CalendarDateAdd(calendar, plainDate, duration, options, dateAdd);
+    }
+
+    // Fast path skipping the calendar call if we are only adding days
+    let year = GetSlot(plainDate, ISO_YEAR);
+    let month = GetSlot(plainDate, ISO_MONTH);
+    let day = GetSlot(plainDate, ISO_DAY);
+    const overflow = ES.ToTemporalOverflow(options);
+    const { days } = ES.BalanceDuration(
+      GetSlot(duration, DAYS),
+      GetSlot(duration, HOURS),
+      GetSlot(duration, MINUTES),
+      GetSlot(duration, SECONDS),
+      GetSlot(duration, MILLISECONDS),
+      GetSlot(duration, MICROSECONDS),
+      GetSlot(duration, NANOSECONDS),
+      'day'
+    );
+    ({ year, month, day } = ES.AddISODate(year, month, day, 0, 0, 0, days, overflow));
+    return ES.CreateTemporalDate(year, month, day, calendar);
+  },
   AddTime: (
     hour,
     minute,
@@ -4200,8 +4226,8 @@ export const ES = ObjectAssign({}, ES2022, {
       const dateDuration1 = new TemporalDuration(y1, mon1, w1, d1, 0, 0, 0, 0, 0, 0);
       const dateDuration2 = new TemporalDuration(y2, mon2, w2, d2, 0, 0, 0, 0, 0, 0);
       const dateAdd = ES.GetMethod(calendar, 'dateAdd');
-      const intermediate = ES.CalendarDateAdd(calendar, relativeTo, dateDuration1, undefined, dateAdd);
-      const end = ES.CalendarDateAdd(calendar, intermediate, dateDuration2, undefined, dateAdd);
+      const intermediate = ES.AddDate(calendar, relativeTo, dateDuration1, undefined, dateAdd);
+      const end = ES.AddDate(calendar, intermediate, dateDuration2, undefined, dateAdd);
 
       const dateLargestUnit = ES.LargerOfTwoTemporalUnits('day', largestUnit);
       const differenceOptions = ObjectCreate(null);
@@ -4341,7 +4367,7 @@ export const ES = ObjectAssign({}, ES2022, {
     const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
     const datePart = ES.CreateTemporalDate(year, month, day, calendar);
     const dateDuration = new TemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
-    const addedDate = ES.CalendarDateAdd(calendar, datePart, dateDuration, options);
+    const addedDate = ES.AddDate(calendar, datePart, dateDuration, options);
 
     return {
       year: GetSlot(addedDate, ISO_YEAR),
@@ -4612,7 +4638,7 @@ export const ES = ObjectAssign({}, ES2022, {
     const durationToAdd = new Duration(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
     const optionsCopy = ObjectCreate(null);
     ES.CopyDataProperties(optionsCopy, options, []);
-    const addedDate = ES.CalendarDateAdd(calendar, startDate, durationToAdd, options);
+    const addedDate = ES.AddDate(calendar, startDate, durationToAdd, options);
     const addedDateFields = ES.PrepareTemporalFields(addedDate, fieldNames, []);
 
     return ES.CalendarYearMonthFromFields(calendar, addedDateFields, optionsCopy);
@@ -4788,7 +4814,7 @@ export const ES = ObjectAssign({}, ES2022, {
     ).days;
   },
   MoveRelativeDate: (calendar, relativeTo, duration, dateAdd) => {
-    const later = ES.CalendarDateAdd(calendar, relativeTo, duration, undefined, dateAdd);
+    const later = ES.AddDate(calendar, relativeTo, duration, undefined, dateAdd);
     const days = ES.DaysUntil(relativeTo, later);
     return { relativeTo: later, days };
   },
@@ -4966,15 +4992,9 @@ export const ES = ObjectAssign({}, ES2022, {
         // relativeTo + years, relativeTo + { years, months, weeks })
         const yearsDuration = new TemporalDuration(years);
         const dateAdd = ES.GetMethod(calendar, 'dateAdd');
-        const yearsLater = ES.CalendarDateAdd(calendar, plainRelativeTo, yearsDuration, undefined, dateAdd);
+        const yearsLater = ES.AddDate(calendar, plainRelativeTo, yearsDuration, undefined, dateAdd);
         const yearsMonthsWeeks = new TemporalDuration(years, months, weeks);
-        const yearsMonthsWeeksLater = ES.CalendarDateAdd(
-          calendar,
-          plainRelativeTo,
-          yearsMonthsWeeks,
-          undefined,
-          dateAdd
-        );
+        const yearsMonthsWeeksLater = ES.AddDate(calendar, plainRelativeTo, yearsMonthsWeeks, undefined, dateAdd);
         const monthsWeeksInDays = ES.DaysUntil(yearsLater, yearsMonthsWeeksLater);
         plainRelativeTo = yearsLater;
         days += monthsWeeksInDays;
@@ -4996,7 +5016,7 @@ export const ES = ObjectAssign({}, ES2022, {
         years += yearsPassed;
         const oldRelativeTo = plainRelativeTo;
         const yearsPassedDuration = new TemporalDuration(yearsPassed);
-        plainRelativeTo = ES.CalendarDateAdd(calendar, plainRelativeTo, yearsPassedDuration, undefined, dateAdd);
+        plainRelativeTo = ES.AddDate(calendar, plainRelativeTo, yearsPassedDuration, undefined, dateAdd);
         const daysPassed = ES.DaysUntil(oldRelativeTo, plainRelativeTo);
         days -= daysPassed;
         const oneYear = new TemporalDuration(days < 0 ? -1 : 1);
@@ -5025,15 +5045,9 @@ export const ES = ObjectAssign({}, ES2022, {
         //   { years, months }, relativeTo + { years, months, weeks })
         const yearsMonths = new TemporalDuration(years, months);
         const dateAdd = ES.GetMethod(calendar, 'dateAdd');
-        const yearsMonthsLater = ES.CalendarDateAdd(calendar, plainRelativeTo, yearsMonths, undefined, dateAdd);
+        const yearsMonthsLater = ES.AddDate(calendar, plainRelativeTo, yearsMonths, undefined, dateAdd);
         const yearsMonthsWeeks = new TemporalDuration(years, months, weeks);
-        const yearsMonthsWeeksLater = ES.CalendarDateAdd(
-          calendar,
-          plainRelativeTo,
-          yearsMonthsWeeks,
-          undefined,
-          dateAdd
-        );
+        const yearsMonthsWeeksLater = ES.AddDate(calendar, plainRelativeTo, yearsMonthsWeeks, undefined, dateAdd);
         const weeksInDays = ES.DaysUntil(yearsMonthsLater, yearsMonthsWeeksLater);
         plainRelativeTo = yearsMonthsLater;
         days += weeksInDays;
