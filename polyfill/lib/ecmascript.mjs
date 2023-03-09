@@ -4385,9 +4385,15 @@ export const ES = ObjectAssign({}, ES2022, {
       return ES.AddInstant(GetSlot(instant, EPOCHNANOSECONDS), h, min, s, ms, µs, ns);
     }
 
+    const dt = precalculatedDateTime ?? ES.GetPlainDateTimeFor(timeZone, instant, calendar);
+    if (ES.DurationSign(years, months, weeks, 0, 0, 0, 0, 0, 0, 0) === 0) {
+      const overflow = ES.ToTemporalOverflow(options);
+      const intermediate = ES.AddDaysToZonedDateTime(instant, dt, timeZone, calendar, days, overflow).epochNs;
+      return ES.AddInstant(intermediate, h, min, s, ms, µs, ns);
+    }
+
     // RFC 5545 requires the date portion to be added in calendar days and the
     // time portion to be added in exact time.
-    const dt = precalculatedDateTime ?? ES.GetPlainDateTimeFor(timeZone, instant, calendar);
     const datePart = ES.CreateTemporalDate(
       GetSlot(dt, ISO_YEAR),
       GetSlot(dt, ISO_MONTH),
@@ -4414,7 +4420,7 @@ export const ES = ObjectAssign({}, ES2022, {
     const instantIntermediate = ES.GetInstantFor(timeZone, dtIntermediate, 'compatible');
     return ES.AddInstant(GetSlot(instantIntermediate, EPOCHNANOSECONDS), h, min, s, ms, µs, ns);
   },
-  AddDaysToZonedDateTime: (instant, dateTime, timeZone, calendar, days) => {
+  AddDaysToZonedDateTime: (instant, dateTime, timeZone, calendar, days, overflow = 'constrain') => {
     // Same as AddZonedDateTime above, but an optimized version with fewer
     // observable calls that only adds a number of days. Returns an object with
     // all three versions of the ZonedDateTime: epoch nanoseconds, Instant, and
@@ -4431,7 +4437,7 @@ export const ES = ObjectAssign({}, ES2022, {
       0,
       0,
       days,
-      'constrain'
+      overflow
     );
     const dateTimeResult = ES.CreateTemporalDateTime(
       addedDate.year,
