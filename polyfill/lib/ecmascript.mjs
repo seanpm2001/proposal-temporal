@@ -4979,8 +4979,17 @@ export const ES = ObjectAssign({}, ES2022, {
         plainRelativeTo = yearsLater;
         days += monthsWeeksInDays;
 
-        const wholeDays = new TemporalDuration(0, 0, 0, days);
-        const wholeDaysLater = ES.CalendarDateAdd(calendar, plainRelativeTo, wholeDays, undefined, dateAdd);
+        const isoResult = ES.AddISODate(
+          GetSlot(plainRelativeTo, ISO_YEAR),
+          GetSlot(plainRelativeTo, ISO_MONTH),
+          GetSlot(plainRelativeTo, ISO_DAY),
+          0,
+          0,
+          0,
+          days,
+          'constrain'
+        );
+        const wholeDaysLater = ES.CreateTemporalDate(isoResult.year, isoResult.month, isoResult.day, calendar);
         const untilOptions = ObjectCreate(null);
         untilOptions.largestUnit = 'year';
         const yearsPassed = ES.CalendarDateUntil(calendar, plainRelativeTo, wholeDaysLater, untilOptions).years;
