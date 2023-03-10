@@ -497,7 +497,6 @@ export class Duration {
     one = ES.ToTemporalDuration(one);
     two = ES.ToTemporalDuration(two);
     options = ES.GetOptionsObject(options);
-    let relativeTo = ES.ToRelativeTemporalObject(options);
     const y1 = GetSlot(one, YEARS);
     const mon1 = GetSlot(one, MONTHS);
     const w1 = GetSlot(one, WEEKS);
@@ -518,6 +517,23 @@ export class Duration {
     const ms2 = GetSlot(two, MILLISECONDS);
     const µs2 = GetSlot(two, MICROSECONDS);
     let ns2 = GetSlot(two, NANOSECONDS);
+
+    if (
+      y1 === y2 &&
+      mon1 === mon2 &&
+      w1 === w2 &&
+      d1 === d2 &&
+      h1 === h2 &&
+      min1 === min2 &&
+      s1 === s2 &&
+      ms1 === ms2 &&
+      µs1 === µs2 &&
+      ns1 === ns2
+    ) {
+      return 0;
+    }
+    const relativeTo = ES.ToRelativeTemporalObject(options);
+
     const shift1 = ES.CalculateOffsetShift(relativeTo, y1, mon1, w1, d1);
     const shift2 = ES.CalculateOffsetShift(relativeTo, y2, mon2, w2, d2);
     if (y1 !== 0 || y2 !== 0 || mon1 !== 0 || mon2 !== 0 || w1 !== 0 || w2 !== 0) {
