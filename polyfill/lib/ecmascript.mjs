@@ -3970,6 +3970,15 @@ export const ES = ObjectAssign({}, ES2022, {
     const otherCalendar = GetSlot(other, CALENDAR);
     ES.CalendarEqualsOrThrow(calendar, otherCalendar, 'compute difference between months');
 
+    const Duration = GetIntrinsic('%Temporal.Duration%');
+    if (
+      GetSlot(yearMonth, ISO_YEAR) === GetSlot(other, ISO_YEAR) &&
+      GetSlot(yearMonth, ISO_MONTH) === GetSlot(other, ISO_MONTH) &&
+      GetSlot(yearMonth, ISO_DAY) === GetSlot(other, ISO_DAY)
+    ) {
+      return new Duration();
+    }
+
     const resolvedOptions = ObjectCreate(null);
     ES.CopyDataProperties(resolvedOptions, ES.GetOptionsObject(options), []);
     const settings = ES.GetDifferenceSettings(operation, resolvedOptions, 'date', ['week', 'day'], 'month', 'year');
@@ -4004,7 +4013,6 @@ export const ES = ObjectAssign({}, ES2022, {
       ));
     }
 
-    const Duration = GetIntrinsic('%Temporal.Duration%');
     return new Duration(sign * years, sign * months, 0, 0, 0, 0, 0, 0, 0, 0);
   },
   DifferenceTemporalZonedDateTime: (operation, zonedDateTime, other, options) => {
