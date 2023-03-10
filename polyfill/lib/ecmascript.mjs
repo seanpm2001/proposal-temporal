@@ -1999,8 +1999,9 @@ export const ES = ObjectAssign({}, ES2022, {
     if (utcns === null) throw new RangeError('DateTime outside of supported range');
     const dayBefore = new Instant(utcns.minus(86400e9));
     const dayAfter = new Instant(utcns.plus(86400e9));
-    const offsetBefore = ES.GetOffsetNanosecondsFor(timeZone, dayBefore);
-    const offsetAfter = ES.GetOffsetNanosecondsFor(timeZone, dayAfter);
+    const getOffsetNanosecondsFor = ES.GetMethod(timeZone, 'getOffsetNanosecondsFor');
+    const offsetBefore = ES.GetOffsetNanosecondsFor(timeZone, dayBefore, getOffsetNanosecondsFor);
+    const offsetAfter = ES.GetOffsetNanosecondsFor(timeZone, dayAfter, getOffsetNanosecondsFor);
     const nanoseconds = offsetAfter - offsetBefore;
     switch (disambiguation) {
       case 'earlier': {
