@@ -2199,7 +2199,7 @@ export const ES = ObjectAssign({}, ES2022, {
     if (minutes) timeParts.push(`${formatNumber(MathAbs(minutes))}M`);
 
     const secondParts = [];
-    let total = ES.TotalDurationNanoseconds(0, 0, 0, seconds, ms, µs, ns, 0);
+    let total = ES.TotalDurationNanoseconds(0, 0, 0, seconds, ms, µs, ns);
     ({ quotient: total, remainder: ns } = total.divmod(1000));
     ({ quotient: total, remainder: µs } = total.divmod(1000));
     ({ quotient: seconds, remainder: ms } = total.divmod(1000));
@@ -2733,8 +2733,7 @@ export const ES = ObjectAssign({}, ES2022, {
       nanosecond: nanosecond.toJSNumber()
     };
   },
-  TotalDurationNanoseconds: (days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, offsetShift) => {
-    if (days !== 0) nanoseconds = bigInt(nanoseconds).subtract(offsetShift);
+  TotalDurationNanoseconds: (days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds) => {
     hours = bigInt(hours).add(bigInt(days).multiply(24));
     minutes = bigInt(minutes).add(hours.multiply(60));
     seconds = bigInt(seconds).add(minutes.multiply(60));
@@ -2900,16 +2899,7 @@ export const ES = ObjectAssign({}, ES2022, {
       const startNs = GetSlot(zonedRelativeTo, EPOCHNANOSECONDS);
       nanoseconds = endNs.subtract(startNs);
     } else {
-      nanoseconds = ES.TotalDurationNanoseconds(
-        days,
-        hours,
-        minutes,
-        seconds,
-        milliseconds,
-        microseconds,
-        nanoseconds,
-        0
-      );
+      nanoseconds = ES.TotalDurationNanoseconds(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
     }
     if (largestUnit === 'year' || largestUnit === 'month' || largestUnit === 'week' || largestUnit === 'day') {
       ({ days, nanoseconds } = ES.NanosecondsToDays(nanoseconds, zonedRelativeTo));
@@ -3246,37 +3236,6 @@ export const ES = ObjectAssign({}, ES2022, {
       weeks: weeks.toJSNumber(),
       days: days.toJSNumber()
     };
-  },
-  CalculateOffsetShift: (relativeTo, y, mon, w, d) => {
-    if (y === 0 && mon === 0 && w === 0 && d === 0) return 0;
-    if (ES.IsTemporalZonedDateTime(relativeTo)) {
-      const instant = GetSlot(relativeTo, INSTANT);
-      const timeZone = GetSlot(relativeTo, TIME_ZONE);
-      const calendar = GetSlot(relativeTo, CALENDAR);
-      const offsetBefore = ES.GetOffsetNanosecondsFor(timeZone, instant);
-      const precalculatedDateTime = ES.GetPlainDateTimeFor(timeZone, instant, calendar, offsetBefore);
-      const after = ES.AddZonedDateTime(
-        instant,
-        timeZone,
-        calendar,
-        y,
-        mon,
-        w,
-        d,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        precalculatedDateTime
-      );
-      const TemporalInstant = GetIntrinsic('%Temporal.Instant%');
-      const instantAfter = new TemporalInstant(after);
-      const offsetAfter = ES.GetOffsetNanosecondsFor(timeZone, instantAfter);
-      return offsetAfter - offsetBefore;
-    }
-    return 0;
   },
   CreateNegatedTemporalDuration: (duration) => {
     const TemporalDuration = GetIntrinsic('%Temporal.Duration%');
@@ -4901,8 +4860,7 @@ export const ES = ObjectAssign({}, ES2022, {
       seconds,
       milliseconds,
       microseconds,
-      nanoseconds,
-      0
+      nanoseconds
     );
     const direction = MathSign(timeRemainderNs.toJSNumber());
 
@@ -4994,7 +4952,7 @@ export const ES = ObjectAssign({}, ES2022, {
     // If rounding relative to a ZonedDateTime, then some days may not be 24h.
     let dayLengthNs;
     if (unit === 'year' || unit === 'month' || unit === 'week' || unit === 'day') {
-      nanoseconds = ES.TotalDurationNanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0);
+      nanoseconds = ES.TotalDurationNanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
       let intermediate;
       if (zonedRelativeTo) {
         intermediate = ES.MoveRelativeZonedDateTime(zonedRelativeTo, years, months, weeks, days);
