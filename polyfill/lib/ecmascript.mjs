@@ -1910,8 +1910,8 @@ export const ES = ObjectAssign({}, ES2022, {
       GetSlot(dateTime, ISO_NANOSECOND)
     );
   },
-  GetOffsetNanosecondsFor: (timeZone, instant) => {
-    const getOffsetNanosecondsFor = ES.GetMethod(timeZone, 'getOffsetNanosecondsFor');
+  GetOffsetNanosecondsFor: (timeZone, instant, getOffsetNanosecondsFor) => {
+    getOffsetNanosecondsFor ??= ES.GetMethod(timeZone, 'getOffsetNanosecondsFor');
     const offsetNs = ES.Call(getOffsetNanosecondsFor, timeZone, [instant]);
     if (typeof offsetNs !== 'number') {
       throw new TypeError('bad return from getOffsetNanosecondsFor');
@@ -2092,8 +2092,8 @@ export const ES = ObjectAssign({}, ES2022, {
     }
     throw new Error(`assertion failed: invalid disambiguation value ${disambiguation}`);
   },
-  GetPossibleInstantsFor: (timeZone, dateTime) => {
-    let getPossibleInstantsFor = ES.GetMethod(timeZone, 'getPossibleInstantsFor');
+  GetPossibleInstantsFor: (timeZone, dateTime, getPossibleInstantsFor = undefined) => {
+    getPossibleInstantsFor ??= ES.GetMethod(timeZone, 'getPossibleInstantsFor');
     const possibleInstants = ES.Call(getPossibleInstantsFor, timeZone, [dateTime]);
     const result = [];
     for (const instant of possibleInstants) {
