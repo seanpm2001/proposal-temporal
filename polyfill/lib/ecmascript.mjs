@@ -3553,6 +3553,19 @@ export const ES = ObjectAssign({}, ES2022, {
     }
     return ES.BalanceDuration(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit);
   },
+  DifferenceDate: (calendar, plainDate1, plainDate2, options, dateUntil) => {
+    if (
+      GetSlot(plainDate1, ISO_YEAR) === GetSlot(plainDate2, ISO_YEAR) &&
+      GetSlot(plainDate1, ISO_MONTH) === GetSlot(plainDate2, ISO_MONTH) &&
+      GetSlot(plainDate1, ISO_DAY) === GetSlot(plainDate2, ISO_DAY)
+    ) {
+      return { years: 0, months: 0, weeks: 0, days: 0 };
+    }
+    if (options.largestUnit === 'day') {
+      return { years: 0, months: 0, weeks: 0, days: ES.DaysUntil(plainDate1, plainDate2) };
+    }
+    return ES.CalendarDateUntil(calendar, plainDate1, plainDate2, options, dateUntil);
+  },
   DifferenceISODateTime: (
     y1,
     mon1,
@@ -3613,7 +3626,7 @@ export const ES = ObjectAssign({}, ES2022, {
     const untilOptions = ObjectCreate(null);
     ES.CopyDataProperties(untilOptions, options, []);
     untilOptions.largestUnit = dateLargestUnit;
-    let { years, months, weeks, days } = ES.CalendarDateUntil(calendar, date1, date2, untilOptions);
+    let { years, months, weeks, days } = ES.DifferenceDate(calendar, date1, date2, untilOptions);
     // Signs of date part and time part may not agree; balance them together
     ({ days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.BalanceDuration(
       days,
@@ -3795,7 +3808,7 @@ export const ES = ObjectAssign({}, ES2022, {
     const settings = ES.GetDifferenceSettings(operation, resolvedOptions, 'date', [], 'day', 'day');
     resolvedOptions.largestUnit = settings.largestUnit;
 
-    let { years, months, weeks, days } = ES.CalendarDateUntil(calendar, plainDate, other, resolvedOptions);
+    let { years, months, weeks, days } = ES.DifferenceDate(calendar, plainDate, other, resolvedOptions);
 
     if (settings.smallestUnit !== 'day' || settings.roundingIncrement !== 1) {
       ({ years, months, weeks, days } = ES.RoundDuration(
@@ -4240,7 +4253,7 @@ export const ES = ObjectAssign({}, ES2022, {
       const dateLargestUnit = ES.LargerOfTwoTemporalUnits('day', largestUnit);
       const differenceOptions = ObjectCreate(null);
       differenceOptions.largestUnit = dateLargestUnit;
-      ({ years, months, weeks, days } = ES.CalendarDateUntil(calendar, relativeTo, end, differenceOptions));
+      ({ years, months, weeks, days } = ES.DifferenceDate(calendar, relativeTo, end, differenceOptions));
       // Signs of date part and time part may not agree; balance them together
       ({ days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds } = ES.BalanceDuration(
         days,
@@ -5020,7 +5033,7 @@ export const ES = ObjectAssign({}, ES2022, {
         const wholeDaysLater = ES.CreateTemporalDate(isoResult.year, isoResult.month, isoResult.day, calendar);
         const untilOptions = ObjectCreate(null);
         untilOptions.largestUnit = 'year';
-        const yearsPassed = ES.CalendarDateUntil(calendar, plainRelativeTo, wholeDaysLater, untilOptions).years;
+        const yearsPassed = ES.DifferenceDate(calendar, plainRelativeTo, wholeDaysLater, untilOptions).years;
         years += yearsPassed;
         const oldRelativeTo = plainRelativeTo;
         const yearsPassedDuration = new TemporalDuration(yearsPassed);
