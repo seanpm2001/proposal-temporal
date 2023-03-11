@@ -231,7 +231,8 @@
         1. Perform ? RequireInternalSlot(_timeZone_, [[InitializedTemporalTimeZone]]).
         1. Set _instant_ to ? ToTemporalInstant(_instant_).
         1. Let _calendar_ be ? ToTemporalCalendarWithISODefault(_calendarLike_).
-        1. Return ? GetPlainDateTimeFor(_timeZone_, _instant_, _calendar_).
+        1. Let _timeZoneRec_ be ? CreateTimeZoneRecord(_timeZone_, « *"getOffsetNanosecondsFor"* »).
+        1. Return ? GetPlainDateTimeFor(_timeZoneRec_, _instant_, _calendar_).
       </emu-alg>
     </emu-clause>
 
@@ -246,7 +247,8 @@
         1. Set _dateTime_ to ? ToTemporalDateTime(_dateTime_).
         1. Set _options_ to ? GetOptionsObject(_options_).
         1. Let _disambiguation_ be ? ToTemporalDisambiguation(_options_).
-        1. Return ? GetInstantFor(_timeZone_, _dateTime_, _disambiguation_).
+        1. Let _timeZoneRec_ be ? CreateTimeZoneRecord(_timeZone_, « *"getPossibleInstantsFor"* »).
+        1. Return ? GetInstantFor(_timeZoneRec_, _dateTime_, _disambiguation_).
       </emu-alg>
     </emu-clause>
 
@@ -379,6 +381,72 @@
 
   <emu-clause id="sec-temporal-timezone-abstract-ops">
     <h1>Abstract operations</h1>
+
+    <emu-clause id="sec-temporal-time-zone-records">
+      <h1>Time Zone Records</h1>
+      <p>
+        A <dfn>Time Zone Record</dfn> is a Record value used to store a Temporal.TimeZone object, or an Object implementing the time zone protocol, along with any methods that have been observably looked up on that object during the current operation.
+        Time Zone Records are produced by the abstract operation CreateTimeZoneRecord.
+      </p>
+      <p>
+        Time Zone Records have the fields listed in <emu-xref href="#table-temporal-time-zone-record-fields"></emu-xref>.
+      </p>
+      <emu-table id="table-temporal-time-zone-record-fields" caption="Time Zone Record Fields">
+        <table class="real-table">
+          <tr>
+            <th>Field Name</th>
+            <th>Value</th>
+            <th>Meaning</th>
+          </tr>
+          <tr>
+            <td>[[Receiver]]</td>
+            <td>an Object</td>
+            <td>
+              The time zone object.
+            </td>
+          </tr>
+          <tr>
+            <td>[[GetOffsetNanosecondsFor]]</td>
+            <td>a function object or *undefined*</td>
+            <td>
+              The time zone's `getOffsetNanosecondsFor` method.
+            </td>
+          </tr>
+          <tr>
+            <td>[[GetPossibleInstantsFor]]</td>
+            <td>a function object or *undefined*</td>
+            <td>
+              The time zone's `getPossibleInstantsFor` method.
+            </td>
+          </tr>
+        </table>
+      </emu-table>
+    </emu-clause>
+
+    <emu-clause id="sec-temporal-createtimezonerecord" type="abstract operation">
+      <h1>
+        CreateTimeZoneRecord (
+          _timeZone_: an Object,
+          _methods_: a List of Strings,
+        ): either a normal completion containing a Time Zone Record, or an abrupt completion
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It creates a Time Zone Record from the given _timeZone_, looking up the methods given in _methods_.</dd>
+      </dl>
+      <emu-alg>
+        1. Let _record_ be the Time Zone Record {
+            [[Receiver]]: _timeZone_,
+            [[GetOffsetNanosecondsFor]]: *undefined*,
+            [[GetPossibleInstantsFor]]: *undefined*
+          }.
+        1. If _methods_ contains *"getOffsetNanosecondsFor"*, then
+          1. Set _record_.[[GetOffsetNanosecondsFor]] to ? GetMethod(_timeZone_, *"getOffsetNanosecondsFor"*).
+        1. If _methods_ contains *"getPossibleInstantsFor"*, then
+          1. Set _record_.[[GetPossibleInstantsFor]] to ? GetMethod(_timeZone_, *"getPossibleInstantsFor"*).
+        1. Return _record_.
+      </emu-alg>
+    </emu-clause>
 
     <emu-clause id="sec-temporal-createtemporaltimezone" type="abstract operation">
       <h1>
@@ -621,7 +689,7 @@
     <emu-clause id="sec-temporal-getplaindatetimefor" type="abstract operation">
       <h1>
         GetPlainDateTimeFor (
-          _timeZone_: an Object,
+          _timeZoneRec_: a Time Zone Record,
           _instant_: a Temporal.Instant,
           _calendar_: an Object,
           optional _precalculatedOffsetNanoseconds_: an integer,
@@ -635,8 +703,9 @@
         </dd>
       </dl>
       <emu-alg>
+        1. Assert: If _precalculatedOffsetNanoseconds_ is not present, _timeZoneRec_.[[GetOffsetNanosecondsFor]] is not *undefined*.
         1. If _precalculatedOffsetNanoseconds_ is present, let _offsetNanoseconds_ be _precalculatedOffsetNanoseconds_.
-        1. Else, let _offsetNanoseconds_ be ? GetOffsetNanosecondsFor(_timeZone_, _instant_).
+        1. Else, let _offsetNanoseconds_ be ? GetOffsetNanosecondsFor(_timeZoneRec_.[[Receiver]], _instant_, _timeZoneRec_.[[GetOffsetNanosecondsFor]]).
         1. Let _result_ be ! GetISOPartsFromEpoch(ℝ(_instant_.[[Nanoseconds]])).
         1. Set _result_ to ! BalanceISODateTime(_result_.[[Year]], _result_.[[Month]], _result_.[[Day]], _result_.[[Hour]], _result_.[[Minute]], _result_.[[Second]], _result_.[[Millisecond]], _result_.[[Microsecond]], _result_.[[Nanosecond]] + _offsetNanoseconds_).
         1. Return ? CreateTemporalDateTime(_result_.[[Year]], _result_.[[Month]], _result_.[[Day]], _result_.[[Hour]], _result_.[[Minute]], _result_.[[Second]], _result_.[[Millisecond]], _result_.[[Microsecond]], _result_.[[Nanosecond]], _calendar_).
@@ -646,7 +715,7 @@
     <emu-clause id="sec-temporal-getinstantfor" type="abstract operation">
       <h1>
         GetInstantFor (
-          _timeZone_: an Object,
+          _timeZoneRec_: a Time Zone Record,
           _dateTime_: a Temporal.PlainDateTime,
           _disambiguation_: *"compatible"*, *"earlier"*, *"later"*, or *"reject"*,
         ): either a normal completion containing a Temporal.Instant, or an abrupt completion
@@ -655,26 +724,42 @@
         <dt>description</dt>
         <dd>
           It is the internal implementation of the `Temporal.TimeZone.prototype.getInstantFor` method.
-          It observably calls the given _timeZone_'s `getPossibleInstantsFor` method at least once.
+          It observably calls the given Time Zone Record's `getPossibleInstantsFor` method at least once.
           If that call returns an empty array and _disambiguation_ is not *"reject"*, it observably calls the time zone's `getOffsetNanosecondsFor` method twice, and `getPossibleInstantsFor` an additional time.
         </dd>
       </dl>
+      <p>
+        _timeZoneRec_ must have looked up at least the `getPossibleInstantsFor` method.
+        `getOffsetNanosecondsFor` will be looked up as needed, since this is one of the few operations that cannot determine in advance whether it will be used.
+      </p>
       <emu-alg>
-        1. Let _possibleInstants_ be ? GetPossibleInstantsFor(_timeZone_, _dateTime_).
-        1. Return ? DisambiguatePossibleInstants(_possibleInstants_, _timeZone_, _dateTime_, _disambiguation_).
+        1. Assert: _timeZoneRec_.[[GetPossibleInstantsFor]] is not *undefined*.
+        1. Let _possibleInstants_ be ? GetPossibleInstantsFor(_timeZoneRec_.[[Receiver]], _dateTime_, _timeZoneRec_.[[GetPossibleInstantsFor]]).
+        1. If _possibleInstants_ is empty, and _timeZoneRec_.[[GetOffsetNanosecondsFor]] is *undefined*, then
+          1. Set _timeZoneRec_.[[GetOffsetNanosecondsFor]] to ? GetMethod(_timeZoneRec_.[[Receiver]], *"getOffsetNanosecondsFor"*).
+        1. Return ? DisambiguatePossibleInstants(_possibleInstants_, _timeZoneRec_, _dateTime_, _disambiguation_).
       </emu-alg>
     </emu-clause>
 
-    <emu-clause id="sec-temporal-disambiguatepossibleinstants" aoid="DisambiguatePossibleInstants">
-      <h1>DisambiguatePossibleInstants ( _possibleInstants_, _timeZone_, _dateTime_, _disambiguation_ )</h1>
-      <p>
-        The abstract operation DisambiguatePossibleInstants chooses from a List of possible `Temporal.Instant` instances the one indicated by the _disambiguation_ parameter.
-      </p>
+    <emu-clause id="sec-temporal-disambiguatepossibleinstants" type="abstract operation">
+      <h1>
+        DisambiguatePossibleInstants (
+          _possibleInstants_: a List of Temporal.Instant objects,
+          _timeZoneRec_: a Time Zone Record,
+          _dateTime_: a Temporal.PlainDateTime,
+          _disambiguation_: *"compatible"*, *"earlier"*, *"later"*, or *"reject"*,
+        ): either a normal completion containing a Temporal.Instant, or an abrupt completion
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It chooses from a List of possible `Temporal.Instant` instances the one indicated by the _disambiguation_ parameter.</dd>
+      </dl>
       <p>
         The _possibleInstants_ List may be empty, in which case it observably calls the time zone's `getOffsetNanosecondsFor` method twice, and `getPossibleInstantsFor` once, if _disambiguation_ is not *"reject"*.
       </p>
       <emu-alg>
-        1. Assert: _dateTime_ has an [[InitializedTemporalDateTime]] internal slot.
+        1. Assert: _timeZoneRec_.[[GetPossibleInstantsFor]] is not *undefined*.
+        1. Assert: If _possibleInstants_ is empty, _timeZoneRec_.[[GetOffsetNanosecondsFor]] is not *undefined*.
         1. Let _n_ be _possibleInstants_'s length.
         1. If _n_ = 1, then
           1. Return _possibleInstants_[0].
@@ -695,20 +780,19 @@
         1. Let _dayAfterNs_ be _epochNanoseconds_ + ℤ(nsPerDay).
         1. If ! IsValidEpochNanoseconds(_dayAfterNs_) is *false*, throw a *RangeError* exception.
         1. Let _dayAfter_ be ! CreateTemporalInstant(_dayAfterNs_).
-        1. Let _getOffsetNanosecondsFor_ be ? GetMethod(_timeZone_, *"getOffsetNanosecondsFor"*).
-        1. Let _offsetBefore_ be ? GetOffsetNanosecondsFor(_timeZone_, _dayBefore_, _getOffsetNanosecondsFor_).
-        1. Let _offsetAfter_ be ? GetOffsetNanosecondsFor(_timeZone_, _dayAfter_, _getOffsetNanosecondsFor_).
+        1. Let _offsetBefore_ be ? GetOffsetNanosecondsFor(_timeZoneRec_.[[Receiver]], _dayBefore_, _timeZoneRec_.[[GetOffsetNanosecondsFor]]).
+        1. Let _offsetAfter_ be ? GetOffsetNanosecondsFor(_timeZoneRec_.[[Receiver]], _dayAfter_, _timeZoneRec_.[[GetOffsetNanosecondsFor]]).
         1. Let _nanoseconds_ be _offsetAfter_ - _offsetBefore_.
         1. If _disambiguation_ is *"earlier"*, then
           1. Let _earlier_ be ? AddDateTime(_dateTime_.[[ISOYear]], _dateTime_.[[ISOMonth]], _dateTime_.[[ISODay]], _dateTime_.[[ISOHour]], _dateTime_.[[ISOMinute]], _dateTime_.[[ISOSecond]], _dateTime_.[[ISOMillisecond]], _dateTime_.[[ISOMicrosecond]], _dateTime_.[[ISONanosecond]], _dateTime_.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, -_nanoseconds_, *undefined*).
           1. Let _earlierDateTime_ be ! CreateTemporalDateTime(_earlier_.[[Year]], _earlier_.[[Month]], _earlier_.[[Day]], _earlier_.[[Hour]], _earlier_.[[Minute]], _earlier_.[[Second]], _earlier_.[[Millisecond]], _earlier_.[[Microsecond]], _earlier_.[[Nanosecond]], _dateTime_.[[Calendar]]).
-          1. Set _possibleInstants_ to ? GetPossibleInstantsFor(_timeZone_, _earlierDateTime_).
+          1. Set _possibleInstants_ to ? GetPossibleInstantsFor(_timeZoneRec_.[[Receiver]], _earlierDateTime_, _timeZoneRec_.[[GetPossibleInstantsFor]]).
           1. If _possibleInstants_ is empty, throw a *RangeError* exception.
           1. Return _possibleInstants_[0].
         1. Assert: _disambiguation_ is *"compatible"* or *"later"*.
         1. Let _later_ be ? AddDateTime(_dateTime_.[[ISOYear]], _dateTime_.[[ISOMonth]], _dateTime_.[[ISODay]], _dateTime_.[[ISOHour]], _dateTime_.[[ISOMinute]], _dateTime_.[[ISOSecond]], _dateTime_.[[ISOMillisecond]], _dateTime_.[[ISOMicrosecond]], _dateTime_.[[ISONanosecond]], _dateTime_.[[Calendar]], 0, 0, 0, 0, 0, 0, 0, 0, 0, _nanoseconds_, *undefined*).
         1. Let _laterDateTime_ be ! CreateTemporalDateTime(_later_.[[Year]], _later_.[[Month]], _later_.[[Day]], _later_.[[Hour]], _later_.[[Minute]], _later_.[[Second]], _later_.[[Millisecond]], _later_.[[Microsecond]], _later_.[[Nanosecond]], _dateTime_.[[Calendar]]).
-        1. Set _possibleInstants_ to ? GetPossibleInstantsFor(_timeZone_, _laterDateTime_).
+        1. Set _possibleInstants_ to ? GetPossibleInstantsFor(_timeZoneRec_.[[Receiver]], _laterDateTime_, _timeZoneRec_.[[GetPossibleInstantsFor]]).
         1. Set _n_ to _possibleInstants_'s length.
         1. If _n_ = 0, throw a *RangeError* exception.
         1. Return _possibleInstants_[_n_ - 1].

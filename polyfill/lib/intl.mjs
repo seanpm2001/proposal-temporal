@@ -1,5 +1,6 @@
 import { ES } from './ecmascript.mjs';
 import { GetIntrinsic } from './intrinsicclass.mjs';
+import { MethodRecord } from './methodrecord.mjs';
 import {
   GetSlot,
   INSTANT,
@@ -382,8 +383,9 @@ function extractOverrides(temporalObj, main) {
     const microsecond = GetSlot(temporalObj, ISO_MICROSECOND);
     const nanosecond = GetSlot(temporalObj, ISO_NANOSECOND);
     const datetime = new DateTime(1970, 1, 1, hour, minute, second, millisecond, microsecond, nanosecond, main[CAL_ID]);
+    const timeZoneRec = new MethodRecord(getResolvedTimeZoneLazy(main), ['getPossibleInstantsFor']);
     return {
-      instant: ES.GetInstantFor(getResolvedTimeZoneLazy(main), datetime, 'compatible'),
+      instant: ES.GetInstantFor(timeZoneRec, datetime, 'compatible'),
       formatter: getPropLazy(main, TIME)
     };
   }
@@ -399,8 +401,9 @@ function extractOverrides(temporalObj, main) {
       );
     }
     const datetime = new DateTime(isoYear, isoMonth, referenceISODay, 12, 0, 0, 0, 0, 0, calendar);
+    const timeZoneRec = new MethodRecord(getResolvedTimeZoneLazy(main), ['getPossibleInstantsFor']);
     return {
-      instant: ES.GetInstantFor(getResolvedTimeZoneLazy(main), datetime, 'compatible'),
+      instant: ES.GetInstantFor(timeZoneRec, datetime, 'compatible'),
       formatter: getPropLazy(main, YM)
     };
   }
@@ -416,8 +419,9 @@ function extractOverrides(temporalObj, main) {
       );
     }
     const datetime = new DateTime(referenceISOYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0, calendar);
+    const timeZoneRec = new MethodRecord(getResolvedTimeZoneLazy(main), ['getPossibleInstantsFor']);
     return {
-      instant: ES.GetInstantFor(getResolvedTimeZoneLazy(main), datetime, 'compatible'),
+      instant: ES.GetInstantFor(timeZoneRec, datetime, 'compatible'),
       formatter: getPropLazy(main, MD)
     };
   }
@@ -431,8 +435,9 @@ function extractOverrides(temporalObj, main) {
       throw new RangeError(`cannot format PlainDate with calendar ${calendar} in locale with calendar ${main[CAL_ID]}`);
     }
     const datetime = new DateTime(isoYear, isoMonth, isoDay, 12, 0, 0, 0, 0, 0, main[CAL_ID]);
+    const timeZoneRec = new MethodRecord(getResolvedTimeZoneLazy(main), ['getPossibleInstantsFor']);
     return {
-      instant: ES.GetInstantFor(getResolvedTimeZoneLazy(main), datetime, 'compatible'),
+      instant: ES.GetInstantFor(timeZoneRec, datetime, 'compatible'),
       formatter: getPropLazy(main, DATE)
     };
   }
@@ -468,8 +473,9 @@ function extractOverrides(temporalObj, main) {
         main[CAL_ID]
       );
     }
+    const timeZoneRec = new MethodRecord(getResolvedTimeZoneLazy(main), ['getPossibleInstantsFor']);
     return {
-      instant: ES.GetInstantFor(getResolvedTimeZoneLazy(main), datetime, 'compatible'),
+      instant: ES.GetInstantFor(timeZoneRec, datetime, 'compatible'),
       formatter: getPropLazy(main, DATETIME)
     };
   }

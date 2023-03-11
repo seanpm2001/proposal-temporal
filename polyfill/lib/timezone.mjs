@@ -2,6 +2,7 @@
 
 import { ES } from './ecmascript.mjs';
 import { GetIntrinsic, MakeIntrinsicClass, DefineIntrinsic } from './intrinsicclass.mjs';
+import { MethodRecord } from './methodrecord.mjs';
 import {
   TIMEZONE_ID,
   EPOCHNANOSECONDS,
@@ -64,14 +65,16 @@ export class TimeZone {
     if (!ES.IsTemporalTimeZone(this)) throw new TypeError('invalid receiver');
     instant = ES.ToTemporalInstant(instant);
     calendar = ES.ToTemporalCalendar(calendar);
-    return ES.GetPlainDateTimeFor(this, instant, calendar);
+    const timeZoneRec = new MethodRecord(this, ['getOffsetNanosecondsFor']);
+    return ES.GetPlainDateTimeFor(timeZoneRec, instant, calendar);
   }
   getInstantFor(dateTime, options = undefined) {
     if (!ES.IsTemporalTimeZone(this)) throw new TypeError('invalid receiver');
     dateTime = ES.ToTemporalDateTime(dateTime);
     options = ES.GetOptionsObject(options);
     const disambiguation = ES.ToTemporalDisambiguation(options);
-    return ES.GetInstantFor(this, dateTime, disambiguation);
+    const timeZoneRec = new MethodRecord(this, ['getPossibleInstantsFor']);
+    return ES.GetInstantFor(timeZoneRec, dateTime, disambiguation);
   }
   getPossibleInstantsFor(dateTime) {
     if (!ES.IsTemporalTimeZone(this)) throw new TypeError('invalid receiver');
