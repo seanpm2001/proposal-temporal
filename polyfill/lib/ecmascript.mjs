@@ -1877,8 +1877,8 @@ export const ES = ObjectAssign({}, ES2022, {
       throw new RangeError('irreconcilable calendars');
     }
   },
-  CalendarDateFromFields: (calendar, fields, options) => {
-    const dateFromFields = ES.GetMethod(calendar, 'dateFromFields');
+  CalendarDateFromFields: (calendar, fields, options, dateFromFields) => {
+    dateFromFields ??= ES.GetMethod(calendar, 'dateFromFields');
     const result = ES.Call(dateFromFields, calendar, [fields, options]);
     if (!ES.IsTemporalDate(result)) throw new TypeError('invalid result');
     return result;
