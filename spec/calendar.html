@@ -66,6 +66,82 @@
   <emu-clause id="sec-temporal-calendar-abstract-ops">
     <h1>Abstract Operations for Temporal.Calendar Objects</h1>
 
+    <emu-clause id="sec-temporal-calendar-records">
+      <h1>Calendar Records</h1>
+      <p>
+        A <dfn>Calendar Record</dfn> is a Record value used to store a Temporal.Calendar object, or an Object implementing the calendar protocol, along with any methods that have been observably looked up on that object during the current operation.
+        Calendar Records are produced by the abstract operation CreateCalendarRecord.
+      </p>
+      <p>
+        Calendar Records have the fields listed in <emu-xref href="#table-temporal-calendar-record-fields"></emu-xref>.
+      </p>
+      <emu-table id="table-temporal-calendar-record-fields" caption="Calendar Record Fields">
+        <table class="real-table">
+          <tr>
+            <th>Field Name</th>
+            <th>Value</th>
+            <th>Meaning</th>
+          </tr>
+          <tr>
+            <td>[[Receiver]]</td>
+            <td>an Object</td>
+            <td>
+              The calendar object.
+            </td>
+          </tr>
+          <tr>
+            <td>[[DateAdd]]</td>
+            <td>a function object or *undefined*</td>
+            <td>
+              The calendar's `dateAdd` method.
+            </td>
+          </tr>
+          <tr>
+            <td>[[DateFromFields]]</td>
+            <td>a function object or *undefined*</td>
+            <td>
+              The calendar's `dateFromFields` method.
+            </td>
+          </tr>
+          <tr>
+            <td>[[DateUntil]]</td>
+            <td>a function object or *undefined*</td>
+            <td>
+              The calendar's `dateUntil` method.
+            </td>
+          </tr>
+        </table>
+      </emu-table>
+    </emu-clause>
+
+    <emu-clause id="sec-temporal-createcalendarrecord" type="abstract operation">
+      <h1>
+        CreateCalendarRecord (
+          _calendar_: an Object,
+          _methods_: a List of Strings,
+        ): either a normal completion containing a Calendar Record, or an abrupt completion
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It creates a Calendar Record from the given _calendar_, looking up the methods given in _methods_.</dd>
+      </dl>
+      <emu-alg>
+        1. Let _record_ be the Calendar Record {
+            [[Receiver]]: _calendar_,
+            [[DateAdd]]: *undefined*,
+            [[DateFromFields]]: *undefined*,
+            [[DateUntil]]: *undefined*
+          }.
+        1. If _methods_ contains *"dateAdd"*, then
+          1. Set _record_.[[DateAdd]] to ? GetMethod(_calendar_, *"dateAdd"*).
+        1. If _methods_ contains *"dateFromFields"*, then
+          1. Set _record_.[[DateFromFields]] to ? GetMethod(_calendar_, *"dateFromFields"*).
+        1. If _methods_ contains *"dateUntil"*, then
+          1. Set _record_.[[DateUntil]] to ? GetMethod(_calendar_, *"dateUntil"*).
+        1. Return _record_.
+      </emu-alg>
+    </emu-clause>
+
     <emu-clause id="sec-temporal-createtemporalcalendar" type="abstract operation">
       <h1>
         CreateTemporalCalendar (

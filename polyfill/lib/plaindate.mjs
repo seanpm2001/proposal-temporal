@@ -14,6 +14,9 @@ import {
   ISO_NANOSECOND,
   CALENDAR,
   EPOCHNANOSECONDS,
+  MONTHS,
+  WEEKS,
+  YEARS,
   GetSlot
 } from './slots.mjs';
 
@@ -121,7 +124,12 @@ export class PlainDate {
     const duration = ES.ToTemporalDuration(temporalDurationLike);
     options = ES.GetOptionsObject(options);
 
-    return ES.AddDate(GetSlot(this, CALENDAR), this, duration, options);
+    const calendarRec = new MethodRecord(GetSlot(this, CALENDAR));
+    if (GetSlot(duration, YEARS) !== 0 || GetSlot(duration, MONTHS) !== 0 || GetSlot(duration, WEEKS) !== 0) {
+      calendarRec.lookup('dateAdd');
+    }
+
+    return ES.AddDate(calendarRec, this, duration, options);
   }
   subtract(temporalDurationLike, options = undefined) {
     if (!ES.IsTemporalDate(this)) throw new TypeError('invalid receiver');
@@ -129,7 +137,12 @@ export class PlainDate {
     const duration = ES.CreateNegatedTemporalDuration(ES.ToTemporalDuration(temporalDurationLike));
     options = ES.GetOptionsObject(options);
 
-    return ES.AddDate(GetSlot(this, CALENDAR), this, duration, options);
+    const calendarRec = new MethodRecord(GetSlot(this, CALENDAR));
+    if (GetSlot(duration, YEARS) !== 0 || GetSlot(duration, MONTHS) !== 0 || GetSlot(duration, WEEKS) !== 0) {
+      calendarRec.lookup('dateAdd');
+    }
+
+    return ES.AddDate(calendarRec, this, duration, options);
   }
   until(other, options = undefined) {
     if (!ES.IsTemporalDate(this)) throw new TypeError('invalid receiver');
