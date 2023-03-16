@@ -202,7 +202,9 @@
 
     <emu-clause id="sec-hostsystemutcepochnanoseconds" type="host-defined abstract operation">
       <h1>
-        HostSystemUTCEpochNanoseconds ( ): a BigInt
+        HostSystemUTCEpochNanoseconds (
+          _global_: a global object
+        ): an integer
       </h1>
       <dl class="header">
         <dt>description</dt>
@@ -225,8 +227,7 @@
       <p>The default implementation of HostSystemUTCEpochNanoseconds performs the following steps when called:</p>
       <emu-alg>
         1. Let _ns_ be the approximate current UTC date and time, in nanoseconds since the epoch.
-        1. Set _ns_ to the result of clamping _ns_ between nsMinInstant and nsMaxInstant.
-        1. Return ℤ(_ns_).
+        1. Return the result of clamping _ns_ between nsMinInstant and nsMaxInstant.
       </emu-alg>
       <p>ECMAScript hosts that are not web browsers must use the default implementation of HostSystemUTCEpochNanoseconds.</p>
     </emu-clause>
@@ -234,7 +235,8 @@
     <emu-clause id="sec-temporal-systemutcepochnanoseconds" aoid="SystemUTCEpochNanoseconds">
       <h1>SystemUTCEpochNanoseconds ( )</h1>
       <emu-alg>
-        1. Return HostSystemUTCEpochNanoseconds ( ).
+        1. Let _global_ be GetGlobalObject().
+        1. Return ℤ(HostSystemUTCEpochNanoseconds(_global_)).
       </emu-alg>
     </emu-clause>
 
