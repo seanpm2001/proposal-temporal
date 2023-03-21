@@ -442,7 +442,51 @@ export class ZonedDateTime {
   }
   toLocaleString(locales = undefined, options = undefined) {
     if (!ES.IsTemporalZonedDateTime(this)) throw new TypeError('invalid receiver');
-    return new DateTimeFormat(locales, options).format(this);
+    options = ES.GetOptionsObject(options);
+
+    const optionsCopy = ObjectCreate(null);
+    // This is not quite per specification, but this polyfill's DateTimeFormat
+    // already doesn't match the InitializeDateTimeFormat operation, and the
+    // access order might change anyway;
+    // see https://github.com/tc39/ecma402/issues/747
+    ES.CopyDataProperties(optionsCopy, options, ['timeZone']);
+
+    if (options.timeZone !== undefined) {
+      throw new TypeError('ZonedDateTime toLocaleString does not accept a timeZone option');
+    }
+
+    if (
+      optionsCopy.year === undefined &&
+      optionsCopy.month === undefined &&
+      optionsCopy.day === undefined &&
+      optionsCopy.weekday === undefined &&
+      optionsCopy.dateStyle === undefined &&
+      optionsCopy.hour === undefined &&
+      optionsCopy.minute === undefined &&
+      optionsCopy.second === undefined &&
+      optionsCopy.timeStyle === undefined &&
+      optionsCopy.dayPeriod === undefined &&
+      optionsCopy.timeZoneName === undefined
+    ) {
+      optionsCopy.timeZoneName = 'short';
+      // The rest of the defaults will be filled in by formatting the Instant
+    }
+
+    // Caution, rebase hazard: Use ToTemporalTimeZoneIdentifier
+    optionsCopy.timeZone = GetSlot(this, TIME_ZONE).id;
+
+    const formatter = new DateTimeFormat(locales, optionsCopy);
+
+    // Caution, rebase hazard: Use ToTemporalCalendarIdentifier
+    const localeCalendar = formatter.resolvedOptions().calendar;
+    const calendar = GetSlot(this, CALENDAR).id;
+    if (calendar !== 'iso8601' && localeCalendar !== 'iso8601' && localeCalendar !== calendar) {
+      throw new RangeError(
+        `cannot format ZonedDateTime with calendar ${calendar} in locale with calendar ${localeCalendar}`
+      );
+    }
+
+    return formatter.format(GetSlot(this, INSTANT));
   }
   toJSON() {
     if (!ES.IsTemporalZonedDateTime(this)) throw new TypeError('invalid receiver');
